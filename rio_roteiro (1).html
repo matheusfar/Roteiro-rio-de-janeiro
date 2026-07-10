@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cidade Maravilhosa — Roteiro Rio de Janeiro</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700;9..144,900&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<style>
+  :root{
+    --navy:#0c2a3a;
+    --navy-2:#123c52;
+    --tile:#1f7a8c;
+    --tile-light:#5aa9b8;
+    --sun:#f4a300;
+    --coral:#f0623f;
+    --paper:#f1f5f4;
+    --paper-2:#ffffff;
+    --ink:#0c2a3a;
+    --ink-soft:#4a6270;
+    --line:#dce6e6;
+    --safe:#1f8a55;
+    --warn:#c98600;
+    --risk:#c23b2e;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0; background:var(--paper); color:var(--ink);
+    font-family:'Work Sans', sans-serif; line-height:1.55;
+  }
+  h1,h2,h3,h4{ font-family:'Fraunces', serif; font-weight:700; margin:0 0 .3em; letter-spacing:-.01em;}
+  a{ color:var(--tile); }
+  .wave{ height:26px; width:100%; display:block; }
+  .wave path{ fill:var(--paper); }
+
+  /* HERO */
+  .hero{
+    background:
+      radial-gradient(1200px 500px at 15% -10%, rgba(244,163,0,.25), transparent 60%),
+      radial-gradient(900px 500px at 90% 0%, rgba(240,98,63,.22), transparent 55%),
+      linear-gradient(180deg, var(--navy), var(--navy-2));
+    color:#eef6f6; padding:64px 24px 40px; position:relative; overflow:hidden;
+  }
+  .hero-inner{ max-width:1080px; margin:0 auto; }
+  .eyebrow{
+    display:inline-flex; align-items:center; gap:8px; font-size:.78rem; letter-spacing:.14em;
+    text-transform:uppercase; color:var(--sun); font-weight:600; margin-bottom:18px;
+  }
+  .hero h1{ font-size:clamp(2.4rem, 6vw, 4.2rem); color:#fff; margin-bottom:.15em; }
+  .hero h1 em{ font-style:normal; color:var(--sun); }
+  .hero p.lead{ max-width:640px; color:#cfe4e6; font-size:1.08rem; }
+  .hero-meta{ display:flex; flex-wrap:wrap; gap:14px; margin-top:28px; }
+  .chip{
+    background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.18);
+    padding:9px 16px; border-radius:99px; font-size:.86rem; color:#e8f2f2;
+  }
+  .chip b{ color:var(--sun); }
+  .hero-wave{ position:absolute; bottom:-1px; left:0; width:100%; line-height:0; }
+  .hero-wave svg{ width:100%; height:60px; display:block; }
+
+  /* NAV */
+  .tabbar{
+    position:sticky; top:0; z-index:50; background:rgba(241,245,244,.92); backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line); padding:10px 0;
+  }
+  .tabbar-inner{
+    max-width:1080px; margin:0 auto; display:flex; gap:8px;
+    overflow-x:auto; -webkit-overflow-scrolling:touch; padding:0 16px; scrollbar-width:none;
+  }
+  .tabbar-inner::-webkit-scrollbar{ display:none; }
+  .tabbar a{
+    text-decoration:none; color:var(--navy); font-weight:600; font-size:.86rem;
+    padding:8px 14px; border-radius:99px; border:1px solid var(--line); background:#fff;
+    transition:all .15s ease; white-space:nowrap; flex-shrink:0;
+  }
+  .tabbar a:hover{ border-color:var(--tile); color:var(--tile); }
+  .tier{
+    font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; font-weight:700;
+    padding:4px 9px; border-radius:99px; white-space:nowrap;
+  }
+  .tier.gratis{ background:#e6f5ec; color:var(--safe); }
+  .tier.eco{ background:#e3f0f4; color:#1f6f8c; }
+  .tier.medio{ background:#fdf1dc; color:var(--warn); }
+  .tier.alto{ background:#fde8e2; color:var(--coral); }
+  .badges-row{ display:flex; gap:6px; flex-wrap:wrap; }
+
+  main{ max-width:1080px; margin:0 auto; padding:0 20px; }
+
+  .day-section{ padding:56px 0 20px; scroll-margin-top:70px; }
+  .day-head{ display:flex; align-items:baseline; gap:16px; margin-bottom:6px; flex-wrap:wrap;}
+  .day-num{ font-family:'Fraunces',serif; font-weight:900; font-size:2.6rem; color:var(--tile); line-height:1;}
+  .day-head h2{ font-size:1.9rem; margin:0; }
+  .day-sub{ color:var(--ink-soft); max-width:680px; margin-bottom:22px; }
+
+  .map{ width:100%; height:300px; border-radius:16px; margin:18px 0 28px; border:1px solid var(--line); z-index:0;}
+
+  .cards{ display:grid; grid-template-columns:repeat(auto-fit,minmax(300px,1fr)); gap:20px; }
+  .card{
+    background:var(--paper-2); border:1px solid var(--line); border-radius:18px; overflow:hidden;
+    display:flex; flex-direction:column;
+  }
+  .card img{ width:100%; height:190px; object-fit:cover; display:block; background:#dde; }
+  .card-body{ padding:18px 20px 20px; display:flex; flex-direction:column; gap:10px; flex:1;}
+  .card-top{ display:flex; justify-content:space-between; align-items:flex-start; gap:8px;}
+  .card h3{ font-size:1.2rem; margin:0; }
+  .badge{
+    font-size:.68rem; text-transform:uppercase; letter-spacing:.06em; font-weight:700;
+    padding:4px 9px; border-radius:99px; white-space:nowrap;
+  }
+  .badge.safe{ background:#e6f5ec; color:var(--safe); }
+  .badge.warn{ background:#fdf1dc; color:var(--warn); }
+  .badge.risk{ background:#fbe8e5; color:var(--risk); }
+  .row{ display:flex; gap:8px; font-size:.9rem; }
+  .row .k{ color:var(--ink-soft); min-width:112px; flex-shrink:0; font-weight:600; font-size:.78rem; text-transform:uppercase; letter-spacing:.04em; padding-top:1px;}
+  .row .v{ color:var(--ink); }
+  .card .maplink{ margin-top:auto; font-size:.85rem; font-weight:600; }
+  .price-tag{ font-family:'Fraunces',serif; font-weight:700; color:var(--coral); }
+
+  .section-alt{ background:var(--paper-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line); }
+  .section-alt .inner{ max-width:1080px; margin:0 auto; padding:56px 20px; }
+
+  table.safety{ width:100%; border-collapse:collapse; margin-top:18px; font-size:.92rem;}
+  table.safety th, table.safety td{ text-align:left; padding:10px 12px; border-bottom:1px solid var(--line); vertical-align:top;}
+  table.safety th{ font-size:.72rem; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); }
+
+  .tips{ display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:16px; margin-top:20px;}
+  .tip{ background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:16px 18px;}
+  .tip .n{ font-family:'Fraunces',serif; color:var(--tile); font-weight:800; font-size:1.3rem; }
+
+  footer{ padding:40px 20px 60px; text-align:center; color:var(--ink-soft); font-size:.85rem; }
+  footer a{ color:var(--tile); }
+
+  .gastro-grid{ display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:14px; margin-top:18px;}
+  .gastro-item{ background:var(--paper); border:1px solid var(--line); border-radius:14px; padding:16px 18px;}
+  .gastro-item h4{ margin:0 0 4px; font-size:1.05rem;}
+  .gastro-item .tag{ font-size:.75rem; color:var(--tile); font-weight:700; text-transform:uppercase; letter-spacing:.04em;}
+
+  @media (max-width:600px){
+    .hero{padding:48px 18px 32px;}
+    .day-section{padding:40px 0 10px;}
+  }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow">● Roteiro personalizado · 4 dias · alto padrão</div>
+    <h1>Cidade <em>Maravilhosa</em></h1>
+    <p class="lead">Um roteiro completo pelo Rio de Janeiro — cartões-postais, cultura, gastronomia (do boteco ao 2 estrelas Michelin) e vida noturna — com endereço, rota de chegada, horário, valor e nível de atenção à segurança para cada parada, em qualquer faixa de orçamento.</p>
+    <div class="hero-meta">
+      <span class="chip"><b>4</b> dias de roteiro</span>
+      <span class="chip"><b>28</b> lugares selecionados</span>
+      <span class="chip"><b>Alto padrão</b> gastronomia e passeios</span>
+      <span class="chip">Atualizado em <b>julho de 2026</b></span>
+    </div>
+  </div>
+  <div class="hero-wave">
+    <svg viewBox="0 0 1440 60" preserveAspectRatio="none"><path fill="#f1f5f4" d="M0,32 C 240,60 480,4 720,28 C 960,52 1200,8 1440,30 L1440,60 L0,60 Z"/></svg>
+  </div>
+</header>
+
+<nav class="tabbar">
+  <div class="tabbar-inner">
+    <a href="#dia1">Dia 1 · Centro & Lapa</a>
+    <a href="#dia2">Dia 2 · Corcovado & Urca</a>
+    <a href="#dia3">Dia 3 · Praias & Jardim</a>
+    <a href="#dia4">Dia 4 · Maracanã & despedida</a>
+    <a href="#extras">Mais lugares (todos os preços)</a>
+    <a href="#gastronomia">Gastronomia</a>
+    <a href="#seguranca">Segurança</a>
+  </div>
+</nav>
+
+<main>
+
+<!-- DIA 1 -->
+<section class="day-section" id="dia1">
+  <div class="day-head"><span class="day-num">01</span><h2>Centro Histórico, Lapa e Santa Teresa</h2></div>
+  <p class="day-sub">Um dia de arquitetura colonial, arte de rua e música ao vivo. Comece na região portuária revitalizada, suba para o charme boêmio de Santa Teresa e feche a noite com samba na Lapa.</p>
+  <div id="map1" class="map"></div>
+  <div class="cards">
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjDMWR-mmtRGQXSrTshw1ImKVvEKxBifgUlncyyhIYt1XDLVy_Fd9cCywpWQQc_Bm0b0WyWi4Q_85cmuAUDN_rkX9c5xTB8tgaaX463sbgYU2Er5_3f0Rw8MHVd7Kv5WM8luZDSR7bhdMtCzaF2m_kgxww=s4800-w800-h600" alt="Museu do Amanhã">
+      <div class="card-body">
+        <div class="card-top"><h3>Museu do Amanhã</h3><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Praça Mauá, 1 — Centro</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">VLT até estação Praça Mauá, ou Uber/táxi. A pé a partir da Candelária (~10 min).</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Qui a ter, 10h–18h (última entrada 17h). Fechado às quartas.</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">R$ 40 inteira · R$ 20 meia-entrada</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Área revitalizada e monitorada de dia; evite os arredores após o anoitecer fora dos eventos programados.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=3560379151274085601" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AJRVUZOBR7HmLZJ6_SCW2ySeKe9PivfN3qd2IypWQDWFtNqXgv6nrLEB9POoKEJRldobu34BGXX49Q3uD-TO7lvbsCDbelPksuRVPMOyCX6H05LEDW26I3bP6k5RsYYdGYxf7LNuMWeaDbOlFIYE6A=s4800-w800-h600" alt="Confeitaria Colombo">
+      <div class="card-body">
+        <div class="card-top"><h3>Confeitaria Colombo</h3><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Gonçalves Dias, 32 — Centro</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Metrô Carioca (10 min a pé) ou Uber/táxi direto.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Seg a sáb, 11h–18h. Fechado aos domingos.</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">≈ R$ 90–160 por pessoa (almoço/café)</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Área comercial movimentada de dia; recomenda-se reserva pois costuma lotar.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=9345797772796085978" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjDrGeVPjnWj5PioD7CHHSyLwsGdckhb9_y83hjCuQWzQkk3mxsWj1GtgrGouObmi_3pB7aYudEnKSOueE7UOhBXr4I8sXdi0fdDHfyIW4jlvncZyd3ggCZGrdWZ-c6yMYT_WLulHSFTkyQ8=s4800-w800-h600" alt="Arcos da Lapa">
+      <div class="card-body">
+        <div class="card-top"><h3>Arcos da Lapa</h3><span class="badge warn">Atenção</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Lapa, Centro do Rio</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Metrô Cinelândia (8 min a pé) ou Uber.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Acesso livre, 24h (monumento a céu aberto)</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Gratuito</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Praça pode reunir moradores em situação de rua. Visite de dia ou em grupo; não fique parado sozinho, sobretudo à noite.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=2486703050185968991" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjB-7WreQjXwqySbLJvurMSjT8Ki_Iy4dp-sX5qx5uojwylp8TRMT2Nm2wCi-J3rMseHHIGNKxLwxQwIxwXNmO2xedRGyN2WonafneRPUOzUHzMgALN-vwrvZNDlVxGo87MYSj0LyAFz5UKYjv8=s4800-w800-h600" alt="Escadaria Selarón">
+      <div class="card-body">
+        <div class="card-top"><h3>Escadaria Selarón</h3><span class="badge warn">Atenção</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Manuel Carneiro — entre Lapa e Santa Teresa</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">5 min a pé a partir dos Arcos da Lapa.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Acesso livre; melhor luz e menos fila pela manhã.</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Gratuito (não exige ingresso)</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Ponto muito turístico e fotografado — cuidado redobrado com celular e câmera nas mãos.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=8503110576046943285" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjDvNgFsIVN40gS7QhuN1ArJAq5i5iSgQ3n5O_WULVy2yEB1QNaDYbwFfogVS-toD4KC4mLgjpRbji5l07cC9go6zCA1_7HzgGkNnwDB8xI3xux4bYhS-O5L7pZcWekmuzXboEdFkp-zY6RzVWI=s4800-w800-h600" alt="Bondinho de Santa Teresa">
+      <div class="card-body">
+        <div class="card-top"><h3>Bondinho de Santa Teresa</h3><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Estação R. Lélio Gama, Centro (Petrobras)</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">5 min a pé da Escadaria Selarón.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Aprox. 8h–17h/18h30 (varia por dia da semana)</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">≈ R$ 20 ida e volta</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Filas longas são o maior transtorno; compre com antecedência quando possível.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=640510591522860305" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjC3oiIG-CbopNsCxBzk7g0dwBE9oIa90FVVPaymoqRGnI6hp3QJqoYTvtAVfwzZtOQRwgJwMO91e5yJ6O9A0-ZnrGMH_sJHX8mxS2gaMmVcEm_rV35h3SO4VmltFQOkm5QxoYMP4qtR1XDdzRsg9UJDaw=s4800-w800-h600" alt="Aprazível">
+      <div class="card-body">
+        <div class="card-top"><h3>Aprazível <span style="font-size:.7em;color:var(--ink-soft)">· Jantar</span></h3><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Aprazível, 62 — Santa Teresa</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi (ruas íngremes; não é indicado ir a pé à noite).</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Ter a sáb 12h–23h · Dom 12h–18h · Fechado seg</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Alto · ≈ R$ 250–400 por pessoa</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Ambiente seguro; peça para o motorista de aplicativo aguardar ou chame o retorno de dentro do restaurante.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=12068129519467378020" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjBvnnsaCdffzBHtOyB3kf2Queom8TXXdm7xKeOBec1KLMPuKq4OthAgMGRVh8Vj64DJaPvqiYPWFpoos_U8XcggxLkdnu-cwmHvrIFrj1q55uveJUtyOoEvouWz4dT_1p6qyI8ZZtjnFIHs3tv_5lP2dw=s4800-w800-h600" alt="Rio Scenarium">
+      <div class="card-body">
+        <div class="card-top"><h3>Rio Scenarium <span style="font-size:.7em;color:var(--ink-soft)">· Vida noturna</span></h3><span class="badge warn">Atenção</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. do Lavradio, 20 — Lapa/Centro</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi até a porta — não estacione na rua nem caminhe sozinho pela Lapa à noite.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Qua a sex 19h–1h/2h · Sáb 12h–18h e 20h–3h · Fechado dom/seg/ter</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Couvert ≈ R$ 35–60 + consumação</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Casa segura com checagem na entrada; o entorno da Lapa exige atenção redobrada — vá e volte de transporte por aplicativo.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=9879348845337068542" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- DIA 2 -->
+<section class="day-section" id="dia2">
+  <div class="day-head"><span class="day-num">02</span><h2>Corcovado, Urca e Botafogo</h2></div>
+  <p class="day-sub">O dia dos dois cartões-postais mais famosos do Rio. Comece cedo no Cristo Redentor para fugir da neblina e das filas, e reserve o fim de tarde para o pôr do sol no Pão de Açúcar.</p>
+  <div id="map2" class="map"></div>
+  <div class="cards">
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AJRVUZO6YilZwqDCo2HTt0JcSknZGR-e2J5RA5EK7gKzFUkUq9X36X2tGiJsxHekVA45f3c0OmOTdp3UU1gR4JKAvXWqgDeByjbu_bGAzhaB8UXisjIBkw089Oyw8sexouMPDdarSjUoS9oB4ibxdw=s4800-w800-h600" alt="Cristo Redentor">
+      <div class="card-body">
+        <div class="card-top"><h3>Cristo Redentor</h3><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Parque Nacional da Tijuca — Corcovado</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Trem do Corcovado (estação Cosme Velho) ou van oficial saindo de Copacabana / Largo do Machado / Paineiras. Compre <b>somente</b> em canais oficiais.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Diariamente, 8h–19h (trens/vans até ~17h–18h30)</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">≈ R$ 105–134 (trem/van) · R$ 60–70 meia/idoso</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Ambiente controlado dentro do parque; cuidado com pertences nas filas e nunca compre de cambistas.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=11369764793252905694" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjBuDIZAZyATcicL3u-RYxqRTA_Omg0jkenmRKmq7Fs0VSM0sJ6HXl-cRfEbWUkjNV4idZnbaqKWp0NwNWl6IkA1pnIA0rubg7qfFdesh4lpeJDOyHt2qQ_isZEYRRXnkjZIYo_c12RFsYZnrQ=s4800-w800-h600" alt="Mirante Dona Marta">
+      <div class="card-body">
+        <div class="card-top"><h3>Mirante Dona Marta</h3><span class="badge warn">Atenção</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Estrada Mirante Dona Marta, Cosme Velho</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi (peça para o motorista aguardar — é difícil pegar carro de volta no local).</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">8h–17h</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Gratuito</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Visite apenas de dia; já houve relatos de abordagens para "cobrança" irregular por pessoas não autorizadas — pague apenas se houver policiamento/fiscalização visível.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=11702338063083114039" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AJRVUZOdFvvEn-wAxZqSEQTJ_G8PQ_mUhJpY5U5lNkG5nBPK7R_Q-BOavazuzNPuj5_d4TXF0RRshotGNKVF6M5D4Gc0URYa6dcna6mrpKHZC3kEU0QOYOcPvdb655-rrdNuVa6p4dPxLRNnhN5xr30=s4800-w800-h600" alt="Pão de Açúcar">
+      <div class="card-body">
+        <div class="card-top"><h3>Bondinho Pão de Açúcar</h3><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Av. Pasteur, 520 — Urca (Estação Praia Vermelha)</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Metrô Botafogo (saída E) + ônibus 513, ou Uber/táxi direto até a Urca.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">≈ 9h–20h (último embarque 18h30)</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">R$ 199 estrangeiro · R$ 155 residente Brasil · R$ 99 meia</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Urca é um dos bairros mais tranquilos e seguros do Rio — ótimo para caminhar mesmo ao entardecer.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=6876293128802468053" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjDJ9-15dI25wzGwaQf6jTVD8h2LxqZDwwPnrixoA3g7EpuPjOSDGYnz7ZzK69-kvoE0pgcQ6hi_tkOTFK64pMQFVbmADQfUTPfx1ixfVz9S9z7c215yGTQT9nWPAwK99XbJSicbmv6RESPiogE=s4800-w800-h600" alt="Lasai">
+      <div class="card-body">
+        <div class="card-top"><h3>Lasai <span style="font-size:.7em;color:var(--ink-soft)">· Jantar</span></h3><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Largo dos Leões, 35 — Humaitá/Botafogo</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi (10 min de Botafogo/Urca).</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Ter a sex 19h–0h · Sáb 19h–2h · Fechado dom/seg</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Altíssimo · menu degustação ≈ R$ 1.200–1.500/pessoa</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Bairro residencial tranquilo; reserve com semanas de antecedência (2 estrelas Michelin, poucos lugares).</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=11823587328888674299" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- DIA 3 -->
+<section class="day-section" id="dia3">
+  <div class="day-head"><span class="day-num">03</span><h2>Zona Sul: praias, jardim e alta gastronomia</h2></div>
+  <p class="day-sub">Um dia no ritmo carioca: manhã de praia, caminhada entre Copacabana e Ipanema, tarde tranquila no Jardim Botânico e noite de alta gastronomia e balada no Leblon/Copacabana.</p>
+  <div id="map3" class="map"></div>
+  <div class="cards">
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjCveiAzdYbb7FMnwddRfuBInchAMdSX76BlwR-nwmjcXz_xrNQEuV_VlW5UvJzCstpQBqR9GLKvRp25Ft75nElN_ca_-B8GEG5pWBBlN0-6h4miNWMuQlLaejQKjeXk6iDHzVr2RVLAfTg6_A=s4800-w800-h600" alt="Praia de Copacabana">
+      <div class="card-body">
+        <div class="card-top"><h3>Praia de Copacabana</h3><span class="badge warn">Atenção</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Av. Atlântica — Copacabana</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Metrô Cardeal Arcoverde / Siqueira Campos / Cantagalo.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Acesso livre, melhor pela manhã</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Gratuito (cadeira/guarda-sol de quiosque ≈ R$ 30–60)</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Praia mais visada para furto de celular e pertences; deixe objetos de valor no hotel e fique atento durante o banho de mar (correnteza forte).</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=725130043184690147" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjB1HOlvSvln957-9t3w-080K0SxtuArBprmiHQk2UhAru_quEPfV0hh8Uva4k4PBpDsYUc5h3U8LavQJ_wnYUz5L4v7CPm_DLWfsnB7kSu2tsodA4-rT5C7wwb2sRxeg3ACt_-mB4v-RqueLqxyTD7Q=s4800-w561-h600" alt="Praia de Ipanema">
+      <div class="card-body">
+        <div class="card-top"><h3>Praia de Ipanema</h3><span class="badge warn">Atenção</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Av. Vieira Souto — Ipanema</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Metrô General Osório ou Nossa Senhora da Paz.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Acesso livre</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Gratuito</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Mais tranquila que Copacabana, mas ainda pede atenção com pertences, principalmente nos finais de semana.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=2986032410662123748" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjAFLAfCXwET_BW50dm5WSW6dR5HsETFxOUKQjbsS5xvB4naEAhsrCJITW2Gn_wFAS1LI3cCv2VqKrHcJG4tER-segTxDvC6SJbmBf8hZsmX-KZUJdL918oPv9c7_KoAoPc_35olIBVa24qW2dA=s4800-w800-h600" alt="Jardim Botânico">
+      <div class="card-body">
+        <div class="card-top"><h3>Jardim Botânico</h3><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Jardim Botânico, 1008</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi a partir de Ipanema/Leblon (~10 min); sem estacionamento próprio.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Seg 12h–18h · Ter a dom 8h–18h</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">≈ R$ 84 inteira · R$ 42 meia (leve dinheiro/cartão)</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Ambiente tranquilo e monitorado; atenção apenas a raízes/galhos no chão e não se aproximar da fauna silvestre.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=17173418671077046881" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjABrRViSDbl9EyY7Q5k1unjhryTVaM1tir6Sgwfp-gj7SVYJUxzhY3HBiLAImXhTUoYHe1UpJh6ngdgTxZlThmQF4BLV_WG8EyuTS7n8O2wn-b2srmHh9kbGolT3T8WHxeN0LNlvtR2KNTPUA=s4800-w800-h600" alt="CT Boucherie">
+      <div class="card-body">
+        <div class="card-top"><h3>CT Boucherie <span style="font-size:.7em;color:var(--ink-soft)">· Jantar</span></h3><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Dias Ferreira, 636 — Leblon</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi ou a pé se estiver hospedado no Leblon/Ipanema.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Seg a qui 12h–17h e 18h30–23h · Sex 12h–17h e 18h30–0h · Sáb 12h–0h · Dom 12h–23h</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Alto · corte de carne ≈ R$ 150–600+</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Leblon é um dos bairros mais seguros da cidade, inclusive à noite.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=17975939355849075970" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjD0SIjGtvD1s_xZzDrprnbMNYzlxAPew4dYBVVhYDevWHbH29No79rUY5F_3UTWArwAc6iFZAN0_srPnk7z8VGODUme2LiwbjKO4HuvKPmxRZsXtHx_FteN1I1GhjqWxRxVjCSC3i4IyUgqfVg=s4800-w800-h600" alt="Fosfobox">
+      <div class="card-body">
+        <div class="card-top"><h3>Fosfobox <span style="font-size:.7em;color:var(--ink-soft)">· Balada</span></h3><span class="badge warn">Atenção</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Siqueira Campos, 143 — Copacabana</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi até a porta (evite caminhar pela Siqueira Campos de madrugada).</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Apenas sex e sáb, 23h–4h45</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Entrada ≈ R$ 40–60</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Casa fechada segura; ruas do entorno de Copacabana pedem atenção redobrada de madrugada.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=9815724511461794861" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- DIA 4 -->
+<section class="day-section" id="dia4">
+  <div class="day-head"><span class="day-num">04</span><h2>Maracanã, Oro e despedida</h2></div>
+  <p class="day-sub">Um dia mais leve para fechar a viagem: futebol na casa mais tradicional do Brasil pela manhã, tempo livre à tarde para compras ou revisitar um lugar favorito, e um jantar de despedida em dois estrelas Michelin.</p>
+  <div id="map4" class="map"></div>
+  <div class="cards">
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjCMwNsigF26wgaMELpQr9D1EXJvAf_Rqg89hNm62Zlh7v4rkzfkuzSzT_8h-Xy3sBNbGKCZLr0mInXCQLkoU8EsV3Ep8xor8wyI7F-N1yvDIOrGzizMrW8mKfZfup5k5p8AlT74rADDrLNsDJY=s4800-w800-h600" alt="Estádio Maracanã">
+      <div class="card-body">
+        <div class="card-top"><h3>Estádio do Maracanã</h3><span class="badge warn">Atenção</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Prof. Eurico Rabelo — Maracanã</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Metrô — estação própria "Maracanã" (a mais prática e segura). Em dia de jogo, prefira ir com tour organizado.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Tour: aprox. 9h–17h em dias sem jogo. Jogos variam conforme calendário.</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Tour ≈ R$ 68–90 · ingresso de jogo varia por partida</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Arredores ficam lotados e há histórico de furtos rápidos ("saidinha") no entorno em dias de jogo — vá em grupo, sem itens de valor à mostra, e combine Uber com ponto de encontro específico.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=17722563422817776869" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AJRVUZNnHEXLdGGsovgyu5MNpN8JctUahdYzepcCorrQr9woCmq_kBZH2OYzxEOz51P_J_9j2WYKD49RlUCpae-BUSTDwyi6lR4HaokMFon2eb0mrhlK23ack3AFpmIy8hFw7YgO4TOt1jy4q5yL-oE=s4800-w800-h600" alt="Oro">
+      <div class="card-body">
+        <div class="card-top"><h3>Oro <span style="font-size:.7em;color:var(--ink-soft)">· Jantar de despedida</span></h3><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Av. Gen. San Martin, 889 — Leblon</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi ou a pé se estiver no Leblon.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Ter a sex 19h–23h · Sáb 13h–16h e 19h–23h · Fechado dom/seg</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Altíssimo · menu degustação ≈ R$ 800–1.200+/pessoa</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Leblon — um dos bairros mais seguros do Rio. Reserve com bastante antecedência (2 estrelas Michelin).</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=18345634823476267559" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- EXTRAS -->
+<section class="day-section" id="extras">
+  <div class="day-head"><h2 style="font-size:2.1rem;">Mais para explorar — todas as faixas de preço</h2></div>
+  <p class="day-sub">Uma seleção extra para encaixar nos dias livres ou trocar por alguma parada do roteiro principal: cultura gratuita, botecos tradicionais, passeios em família e vida noturna alternativa — do gratuito ao investimento médio.</p>
+  <div id="mapExtras" class="map"></div>
+  <div class="cards">
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AJRVUZPskJ77ewqYvdpKz4WsMvJx1S6wO7KPLShOnD1sBy_5EFm6kk3qYsvXwBvgdmmKg-RJg1lL30YB3fQwap6cwAfYesdYoi6QXnncS0hlzoFAER4SpciMvwnbpAj4alhZeUT1zTsQ67WFIXJXP0QKkHjqkQ=s4800-w516-h387" alt="Pedra do Sal">
+      <div class="card-body">
+        <div class="card-top"><h3>Pedra do Sal <span style="font-size:.7em;color:var(--ink-soft)">· Vida noturna</span></h3></div>
+        <div class="badges-row"><span class="tier gratis">Gratuito</span><span class="badge warn">Atenção</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Tia Ciata — Saúde, Região Portuária</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi até a porta; a região é pouco iluminada no entorno.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Roda de samba principal às segundas, 19h–0h. Também tem programação sex a dom.</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Gratuito (leve dinheiro para bebida/comida de barraca)</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Fica muito lotado — há relatos de furto de celular no meio da multidão. Leve só o essencial e fique atento aos pertences.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=764529024358662750" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjAFE_YNX5hRPFmwoi1xXcVLXlvBcRKlPow7W9VRdQ1R7-fctjk_gLhGsYvZanz5R69H7kRhJGC1JJCkuRz2DfbOQRnInFsnaqH7AGwqgu9DCk6mDqpylTzyMnpXeWDIVZTjtHVudNmWt1In=s4800-w800-h600" alt="Feira de São Cristóvão">
+      <div class="card-body">
+        <div class="card-top"><h3>Feira de São Cristóvão</h3></div>
+        <div class="badges-row"><span class="tier gratis">Gratuito*</span><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Campo de São Cristóvão — São Cristóvão</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Estacionamento próprio (700 vagas) ou Uber/táxi; VLT + curta caminhada.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Ter a qui 10h–18h · Sex e sáb 10h–4h · Dom 10h–20h · Fechado seg</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Entrada gratuita durante a semana; taxa simbólica às noites de fim de semana</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Ambiente familiar e monitorado; o único incômodo comum são vendedores insistentes nos restaurantes.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=2400101430491284862" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AJRVUZMj6e9dzYtNMKLxaNFSaJ1aVui1N9H8mFfURkzniSzmZIC9dsRZ4ADXonR8yL34sUmMB3A4fIA6LllHVCnDDjCds8s5BVufIXD_Wh9JJjcO-6qvOoJ9aY9NumBoXOSpB6IS1H_Wa6KjXV_lLg=s4800-w490-h480" alt="Theatro Municipal">
+      <div class="card-body">
+        <div class="card-top"><h3>Theatro Municipal</h3></div>
+        <div class="badges-row"><span class="tier eco">Econômico</span><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Praça Floriano, s/n — Cinelândia, Centro</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Metrô Cinelândia (saída na porta).</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Tours guiados: seg a sex 10h–18h. Espetáculos variam (confira programação).</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Tour ≈ R$ 20 · ingressos de espetáculo variam</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Região central movimentada de dia; bom cuidado com pertences igual ao resto do Centro.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=11601199394787272000" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjDlU4IlcHqSvA7VY_SyylcadlB7bZ7ZkfQpqmhPAb4X5UfMIhEkkgm6oCanET5fIIJWfb4gqnLu-s7lqVl0yFSz_V69dp5wLjXHHQCsNtj5UImopmvp_CIsUTYb_R1T92eeMkMAVV9yoNnv3mA=s4800-w800-h586" alt="Parque Lage">
+      <div class="card-body">
+        <div class="card-top"><h3>Parque Lage</h3></div>
+        <div class="badges-row"><span class="tier gratis">Gratuito</span><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Jardim Botânico, 414</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi a partir de Ipanema/Jardim Botânico (~10 min).</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Diariamente, 8h–18h</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Gratuito (café da mansão à parte, quando aberto)</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Parque tranquilo e monitorado; trilhas mais isoladas (rumo ao Corcovado) são melhores em grupo.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=2658437430303769635" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AJRVUZO6n0CtO7IHrlZBl161y_-fP2wCLNitDMsAbu2K4rAcR0BmcfsOHqqOsZ260wH4d2DpBWXIX0qETwJsF2w1smQamAWJrQAko9OYtjQqGOi7FnHEg_lVZW4rvQJzaa8sqXIe1CNxzvnrhOov7CU=s4800-w800-h600" alt="AquaRio">
+      <div class="card-body">
+        <div class="card-top"><h3>AquaRio</h3></div>
+        <div class="badges-row"><span class="tier medio">Médio</span><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Praça Muhammad Ali — Gamboa (Região Portuária)</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">VLT Linha 1 até estação AquaRio, ou Uber/táxi.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Diariamente, 9h–17h (última entrada 16h)</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">R$ 80 inteira · R$ 40 meia/criança · R$ 50/25 morador RJ</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Região portuária monitorada de dia; ótimo passeio em família, inclusive em dias de chuva.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=9268765874215578964" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjCA4c11bcVehpFH6crw3zKtYy9Kz-6S0KdctVJvoWY1m6oYMclTKEqKIzyYwzGGn8WXxzyk5pN3FSR-Ee_czTeILj1XLWLWvm1vLiomcluOtAt25sdsN-klXgyoaPzjfnbz7DNCXTpEu_p4BRs=s4800-w800-h600" alt="Forte de Copacabana">
+      <div class="card-body">
+        <div class="card-top"><h3>Forte de Copacabana</h3></div>
+        <div class="badges-row"><span class="tier gratis">Muito econômico</span><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">Praça Cel. Eugênio Franco, 1 — Posto 6, Copacabana</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">A pé pelo calçadão a partir de qualquer ponto de Copacabana.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Ter a dom, 10h–19h. Fechado seg.</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">R$ 10 (atenção: só dinheiro em espécie)</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Área com segurança do Exército; uma das vistas mais bonitas e tranquilas de Copacabana.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=6234648388384712509" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjAsU6yE9xo5uORtP32jKcyvZXxV_VtM4RSog1c3WVuZTUicgUsAmZ8bMZyzXT3vKMT5eC8ODRi2R1EfQNy59ggKzDzNFzR89yltCtqhx7z6ow9CthzctjLUXo3ukpkCmRLHipE5lcBizRMpXYzUJnE2HA=s4800-w800-h600" alt="Bar do Mineiro">
+      <div class="card-body">
+        <div class="card-top"><h3>Bar do Mineiro <span style="font-size:.7em;color:var(--ink-soft)">· Feijoada</span></h3></div>
+        <div class="badges-row"><span class="tier medio">Médio</span><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Paschoal Carlos Magno, 99 — Santa Teresa</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi (mesma região da Escadaria Selarón e do bondinho).</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Diariamente 8h30–22h30 (dom até 22h)</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">≈ R$ 80–120 por pessoa</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Tranquilo durante o dia; à noite prefira Uber porta a porta como no resto de Santa Teresa.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=5977993711614955833" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AJRVUZMLKvSvSZJcwPMFgIeJJVv_itUcbRbe4mdMR8-r0CmlQe7yQJxXog-M1iRUg0W2tndHqoogXJNI-YqjRfn2Pxutc7zNBxZbEC-CpynYUXvY8078gLdWrS8_bGRJeRMINXf_uw0jmzcLM-o97A=s4800-w800-h600" alt="Galeto Sat's">
+      <div class="card-body">
+        <div class="card-top"><h3>Galeto Sat's</h3></div>
+        <div class="badges-row"><span class="tier eco">Econômico</span><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Barata Ribeiro, 7 — Copacabana</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Metrô Cardeal Arcoverde (5 min a pé) ou a pé de qualquer hotel em Copacabana.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Diariamente, 12h–4h/5h da manhã</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">≈ R$ 60–100 por pessoa</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Rua movimentada de Copacabana; espaço pequeno, costuma ter fila nos horários de pico.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=2642403775920791840" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AG9NLjDPu3ari544yT7Dh9Xgx0lWLZhvxu9sAASgPpk2skMdg3XdJ-0xt6y5hxBsaUlS1GCX7Zi_8X1rjd-vDcsGFI0grkLYMig4c4Ho5SE6Pj-viOl4KHbdfxF7Jn1HcRuNubDwTUp2wycQtIGE5m4=s4800-w800-h600" alt="Aconchego Carioca">
+      <div class="card-body">
+        <div class="card-top"><h3>Aconchego Carioca <span style="font-size:.7em;color:var(--ink-soft)">· Boteco premiado</span></h3></div>
+        <div class="badges-row"><span class="tier medio">Médio</span><span class="badge warn">Atenção</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Barão de Iguatemi, 245 — Praça da Bandeira</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">Uber/táxi direto até a porta — bairro pouco turístico e mal sinalizado a pé.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Ter a sáb 12h–23h · Dom 12h–17h30 · Fechado seg</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">≈ R$ 70–110 por pessoa</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Bairro residencial simples, fora do circuito turístico — vá e volte de aplicativo, principalmente à noite.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=17444027267324076755" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+    <div class="card">
+      <img src="https://lh3.googleusercontent.com/place-photos/AJRVUZOv_vWoT9d1Mf2Lzh0nd9DPvI2zLSJyya6vsj0YpYmhSvPE19Ycvxdap11tJ3MPvOUVLzQUa1-D_fVftG_RInXlb24BnRoEZNBO9fd_P9Ycb_XLtUYwuo96nid-xTz6RIEvuWpIOMZwT9Dd=s4800-w800-h600" alt="Bip Bip">
+      <div class="card-body">
+        <div class="card-top"><h3>Bip Bip <span style="font-size:.7em;color:var(--ink-soft)">· Samba e choro ao vivo</span></h3></div>
+        <div class="badges-row"><span class="tier gratis">Muito econômico</span><span class="badge safe">Baixa</span></div>
+        <div class="row"><span class="k">Endereço</span><span class="v">R. Alm. Gonçalves, 50 — Copacabana</span></div>
+        <div class="row"><span class="k">Como chegar</span><span class="v">A pé a partir de qualquer ponto de Copacabana; bar minúsculo, sem placa grande.</span></div>
+        <div class="row"><span class="k">Horário</span><span class="v">Ter a qui e dom, 19h/20h–1h. Sem couvert, sem cartão — self-service.</span></div>
+        <div class="row"><span class="k">Valor</span><span class="v price-tag">Só o consumo de bebida (bem barato)</span></div>
+        <div class="row"><span class="k">Periculosidade</span><span class="v">Dentro de Copacabana, rua movimentada; espaço pequeno e informal, fique atento aos pertences no meio da roda.</span></div>
+        <a class="maplink" href="https://maps.google.com/?cid=17689520154855466004" target="_blank">Ver no Google Maps →</a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- GASTRONOMIA RESUMO -->
+<section class="section-alt" id="gastronomia">
+  <div class="inner">
+    <h2>Resumo · Alta gastronomia carioca</h2>
+    <p class="day-sub">Outras referências de alto padrão para incluir no roteiro se sobrar tempo ou apetite — todas reconhecidas pelo Guia Michelin ou pela crítica especializada em 2026.</p>
+    <div class="gastro-grid">
+      <div class="gastro-item"><span class="tag">Botafogo</span><h4>Oteque</h4><p>Menu degustação diário com ingredientes locais e sazonais.</p></div>
+      <div class="gastro-item"><span class="tag">Copacabana Palace</span><h4>Mee</h4><p>Culinária pan-asiática com 1 estrela Michelin.</p></div>
+      <div class="gastro-item"><span class="tag">Ipanema</span><h4>Gero (Hotel Fasano)</h4><p>Alta gastronomia italiana com varanda de frente para o mar.</p></div>
+      <div class="gastro-item"><span class="tag">Copacabana Palace</span><h4>Cipriani</h4><p>Clássico italiano com 1 estrela Michelin (verificar reabertura).</p></div>
+      <div class="gastro-item"><span class="tag">Leme</span><h4>Marius Degustare</h4><p>Rodízio premium de frutos do mar e carnes nobres.</p></div>
+      <div class="gastro-item"><span class="tag">Centro histórico</span><h4>Rua do Lavradio</h4><p>Boteco e antiquário de dia, vida noturna e samba de raiz à noite.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- SEGURANÇA -->
+<section id="seguranca" style="padding:56px 20px 20px; max-width:1080px; margin:0 auto;">
+  <h2>Guia de segurança para turistas</h2>
+  <p class="day-sub">O Rio recebe milhões de turistas com tranquilidade todos os anos, mas — como em qualquer grande metrópole — vale seguir alguns cuidados básicos e saber quais áreas pedem mais atenção.</p>
+
+  <table class="safety">
+    <thead><tr><th>Região</th><th>Nível</th><th>Observações</th></tr></thead>
+    <tbody>
+      <tr><td>Leblon</td><td><span class="badge safe">Baixa</span></td><td>Considerado o bairro mais seguro e tranquilo da Zona Sul, de dia e à noite.</td></tr>
+      <tr><td>Ipanema</td><td><span class="badge safe">Baixa</span></td><td>Movimentado, bem policiado e com forte presença turística.</td></tr>
+      <tr><td>Urca</td><td><span class="badge safe">Baixa</span></td><td>Bairro residencial pequeno e tranquilo, ótimo para caminhar.</td></tr>
+      <tr><td>Copacabana</td><td><span class="badge warn">Atenção</span></td><td>Muito turístico e visado para furtos de celular/pertences, sobretudo na praia e à noite fora da avenida principal.</td></tr>
+      <tr><td>Centro (dia)</td><td><span class="badge warn">Atenção</span></td><td>Seguro para visitar os museus e a arquitetura histórica em horário comercial; esvazia e fica menos seguro à noite.</td></tr>
+      <tr><td>Lapa / Arcos (noite)</td><td><span class="badge warn">Atenção</span></td><td>Vida noturna famosa, mas ruas laterais ficam desertas tarde da noite — vá e volte de Uber/táxi.</td></tr>
+      <tr><td>Entorno do Maracanã (dia de jogo)</td><td><span class="badge warn">Atenção</span></td><td>Aglomeração intensa; prefira ir com tour organizado ou em grupo.</td></tr>
+      <tr><td>Comunidades/favelas sem acompanhamento</td><td><span class="badge risk">Alto cuidado</span></td><td>Não são parte deste roteiro. Visitas só são recomendadas com guia local especializado e tour autorizado.</td></tr>
+    </tbody>
+  </table>
+
+  <div class="tips">
+    <div class="tip"><div class="n">01</div><p>Use sempre Uber, táxi Rio ou transporte por aplicativo à noite — evite o metrô sozinho depois das 22h.</p></div>
+    <div class="tip"><div class="n">02</div><p>Não exiba celular, câmera ou joias em sinais de trânsito, filas e calçadões — mantenha tudo junto ao corpo.</p></div>
+    <div class="tip"><div class="n">03</div><p>Compre ingressos de atrações (Cristo, Pão de Açúcar, Maracanã) somente em canais oficiais, nunca com cambistas.</p></div>
+    <div class="tip"><div class="n">04</div><p>Nas praias, deixe objetos de valor no hotel e preste atenção à sinalização de correnteza (bandeiras vermelhas).</p></div>
+    <div class="tip"><div class="n">05</div><p>Evite ruas vazias e mal iluminadas após o anoitecer, mesmo em bairros considerados seguros.</p></div>
+    <div class="tip"><div class="n">06</div><p>Leve apenas cópias de documentos e um cartão; evite carregar toda a quantia em dinheiro pelo dia.</p></div>
+  </div>
+</section>
+
+<footer>
+  <p>Roteiro elaborado com base em fontes turísticas oficiais e guias locais atualizados (julho de 2026). Preços, horários e regras de acesso mudam com frequência — <b>confirme sempre no site oficial de cada atração antes de viajar</b>.</p>
+  <p>Feito com atenção para uma viagem inesquecível pelo Rio de Janeiro. 🌊</p>
+</footer>
+</main>
+
+<script>
+function buildMap(id, points){
+  var map = L.map(id, {scrollWheelZoom:false}).setView(points[0].coords, 12);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19, attribution:'&copy; OpenStreetMap contributors'
+  }).addTo(map);
+  var bounds = [];
+  points.forEach(function(p){
+    L.marker(p.coords).addTo(map).bindPopup('<b>'+p.name+'</b>');
+    bounds.push(p.coords);
+  });
+  if(bounds.length>1){ map.fitBounds(bounds, {padding:[30,30]}); }
+}
+
+buildMap('map1', [
+  {name:'Museu do Amanhã', coords:[-22.8940177,-43.1794418]},
+  {name:'Confeitaria Colombo', coords:[-22.9051966,-43.1787459]},
+  {name:'Arcos da Lapa', coords:[-22.9126382,-43.1798573]},
+  {name:'Escadaria Selarón', coords:[-22.9152923,-43.1792036]},
+  {name:'Bondinho Santa Teresa', coords:[-22.9100153,-43.1785278]},
+  {name:'Aprazível', coords:[-22.9248138,-43.18747]},
+  {name:'Rio Scenarium', coords:[-22.9082902,-43.1841372]}
+]);
+buildMap('map2', [
+  {name:'Cristo Redentor', coords:[-22.951916,-43.2104872]},
+  {name:'Mirante Dona Marta', coords:[-22.9449982,-43.1963955]},
+  {name:'Pão de Açúcar', coords:[-22.9557706,-43.1669827]},
+  {name:'Lasai', coords:[-22.9533081,-43.1963114]}
+]);
+buildMap('map3', [
+  {name:'Praia de Copacabana', coords:[-22.9738729,-43.18531]},
+  {name:'Praia de Ipanema', coords:[-22.987064,-43.2047975]},
+  {name:'Jardim Botânico', coords:[-22.9706778,-43.2234752]},
+  {name:'CT Boucherie', coords:[-22.9820541,-43.2243437]},
+  {name:'Fosfobox', coords:[-22.9662304,-43.1879955]}
+]);
+buildMap('map4', [
+  {name:'Estádio Maracanã', coords:[-22.912161,-43.2301712]},
+  {name:'Oro', coords:[-22.9860381,-43.2247778]}
+]);
+buildMap('mapExtras', [
+  {name:'Pedra do Sal', coords:[-22.8979788,-43.185326]},
+  {name:'Feira de São Cristóvão', coords:[-22.8976512,-43.2202037]},
+  {name:'Theatro Municipal', coords:[-22.9090481,-43.1765575]},
+  {name:'Parque Lage', coords:[-22.961123,-43.2127151]},
+  {name:'AquaRio', coords:[-22.89332,-43.1921598]},
+  {name:'Forte de Copacabana', coords:[-22.9861713,-43.1876757]},
+  {name:'Bar do Mineiro', coords:[-22.9210655,-43.1869033]},
+  {name:"Galeto Sat's", coords:[-22.9624848,-43.1761372]},
+  {name:'Aconchego Carioca', coords:[-22.9129793,-43.2140706]},
+  {name:'Bip Bip', coords:[-22.9798188,-43.190373]}
+]);
+</script>
+
+</body>
+</html>
